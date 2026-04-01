@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wizard-container">
+    <h2>👋 Let's get to know how you think.</h2>
+    <p class="subtitle">EchoCare adapts to <strong>your</strong> cognitive style. Answer freely - there are no right or wrong answers.</p>
+    
+    <form method="POST" action="{{ url_for('profiling_wizard') }}">
+        {% for q in questions %}
+        <div class="question-card">
+            <h3>{{ loop.index }}. {{ q.question }}</h3>
+            <p class="axis-label">Axis: {{ q.axis }}</p>
+            <textarea 
+                name="{{ q.id }}" 
+                rows="4" 
+                placeholder="Share your thoughts naturally..." 
+                required
+            ></textarea>
+            <p class="helper-text">Take your time. Write as much or as little as feels natural.</p>
+        </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn-primary">Create My Profile</button>
+    </form>
+</div>
+
+<style>
+.question-card textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    resize: vertical;
+    margin-top: 0.5rem;
+}
+
+.question-card textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.helper-text {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+</style>
+{% endblock %}
