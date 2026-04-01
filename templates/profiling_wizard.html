@@ -2,51 +2,131 @@
 
 {% block content %}
 <div class="wizard-container">
-    <h2>👋 Let's get to know how you think.</h2>
-    <p class="subtitle">EchoCare adapts to <strong>your</strong> cognitive style. Answer freely - there are no right or wrong answers.</p>
+    <div class="wizard-header">
+        <h2>👋 Let's get to know you</h2>
+        <p class="subtitle">Take your time. Share what feels natural — there are no right or wrong answers. This helps me understand how to best support you.</p>
+    </div>
     
-    <form method="POST" action="{{ url_for('profiling_wizard') }}">
+    <form method="POST" action="{{ url_for('profiling_wizard') }}" id="profiling-form">
         {% for q in questions %}
-        <div class="question-card">
-            <h3>{{ loop.index }}. {{ q.question }}</h3>
-            <p class="axis-label">Axis: {{ q.axis }}</p>
+        <div class="question-step" id="step-{{ loop.index }}" style="display: {% if loop.first %}block{% else %}none{% endif %};">
+            <p class="question-text">{{ q.question }}</p>
             <textarea 
                 name="{{ q.id }}" 
-                rows="4" 
-                placeholder="Share your thoughts naturally..." 
+                rows="5" 
+                placeholder="Write whatever comes to mind..." 
                 required
+                class="response-input"
             ></textarea>
-            <p class="helper-text">Take your time. Write as much or as little as feels natural.</p>
+            <div class="step-nav">
+                {% if not loop.last %}
+                    <button type="button" class="btn-secondary" onclick="nextStep({{ loop.index }})">Next</button>
+                {% else %}
+                    <button type="submit" class="btn-primary">Continue</button>
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
-        
-        <button type="submit" class="btn-primary">Create My Profile</button>
     </form>
+    
+    <div class="progress-indicator">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
 </div>
 
 <style>
-.question-card textarea {
+.wizard-container {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    max-width: 600px;
+    margin: 2rem auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.wizard-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.question-text {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #333;
+    line-height: 1.5;
+}
+
+.response-input {
     width: 100%;
     padding: 1rem;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
     resize: vertical;
-    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.2s;
 }
 
-.question-card textarea:focus {
+.response-input:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
-.helper-text {
-    font-size: 0.85rem;
-    color: #888;
-    margin-top: 0.5rem;
-    font-style: italic;
+.step-nav {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.progress-indicator {
+    height: 4px;
+    background: #eee;
+    border-radius: 2px;
+    margin-top: 2rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--primary);
+    width: 25%;
+    transition: width 0.3s ease;
+}
+
+/* Smooth transitions */
+.question-step {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+<script>
+function nextStep(current) {
+    // Validate current step has input
+    const textarea = document.querySelector(`#step-${current} textarea`);
+    if (!textarea.value.trim()) {
+        textarea.placeholder = "Please share your thoughts first...";
+        return;
+    }
+    
+    // Hide current, show next
+    document.getElementById(`step-${current}`).style.display = 'none';
+    document.getElementById(`step-${current + 1}`).style.display = 'block';
+    
+    // Update progress
+    const progress = (current / {{ questions|length }}) * 100;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+}
+</script>
 {% endblock %}

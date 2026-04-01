@@ -120,36 +120,31 @@ def logout():
 @app.route("/profiling", methods=["GET", "POST"])
 @login_required
 def profiling_wizard():
-    # Check if already completed
     user_doc = users_collection.find_one({"_id": current_user.id})
     if user_doc.get("profiling_completed"):
         return redirect(url_for("index"))
 
     if request.method == "POST":
-        # Collect all answers from form
         answers = {}
         for question in PsychologicalProfiler.get_questions():
             q_id = question["id"]
-            user_response = request.form.get(q_id, "")
+            user_response = request.form.get(q_id, "").strip()
             
             if user_response:
-                # Analyze each response using LLM
+                # Silent backend analysis
                 analysis = PsychologicalProfiler.analyze_response(q_id, user_response)
                 answers[q_id] = analysis
         
-        # Calculate final persona
         profile_result = PsychologicalProfiler.calculate_persona(answers)
         profile_result["completed_at"] = datetime.now()
         
-        # Update DB
         users_collection.update_one(
             {"_id": current_user.id},
             {"$set": {"profile": profile_result, "profiling_completed": True}}
         )
-        flash("Profile created! Welcome to your personalized space.")
+        flash("Thanks for sharing! Let's begin.")
         return redirect(url_for("index"))
 
-    # GET: Show Questions
     questions = PsychologicalProfiler.get_questions()
     return render_template("profiling_wizard.html", questions=questions)
 
