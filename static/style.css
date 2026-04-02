@@ -466,13 +466,21 @@ body {
     display: flex;
     width: 95%;
     max-width: 1100px;
-    background: rgba(255, 255, 255, 0.9);
+    
+    /* 1. Lowered background opacity from 0.9 to 0.1 */
+    background: rgba(255, 255, 255, 0.1); 
+    
+    /* 2. Kept the blur - this is what makes it look like glass */
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px); /* Added for Safari support */
+    
+    /* 3. Softened the border so it's not a harsh white line */
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     animation: fadeIn 0.6s ease;
-    border: 1px solid rgba(255, 255, 255, 0.6);
     min-height: 700px;
     height: calc(100vh - 140px);
 }
@@ -652,48 +660,64 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* Input Container */
+/* ========================================
+   INPUT CONTAINER (REFINED GLASS)
+   ======================================== */
 .input-container {
     display: flex;
-    gap: 10px;
-    padding: 0 2rem 2rem;
-    background: rgba(255, 255, 255, 0.7);
+    gap: 12px;
+    padding: 1.5rem 2rem 2rem; /* Adjusted padding for better balance */
+    background: transparent;    /* Remove the solid background to let the main glass show through */
 }
 
 .input-container input {
     flex: 1;
-    padding: 12px;
-    border-radius: 6px;
-    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;       /* Rounder corners look more modern */
+    border: 1px solid rgba(255, 255, 255, 0.3);
     font-size: 14px;
     outline: none;
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(8px);
-    color: #333;
-    transition: background 0.3s ease;
+    
+    /* Input Glass Effect */
+    background: rgba(255, 255, 255, 0.2); 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    color: #444;
+    transition: all 0.3s ease;
+}
+
+.input-container input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
 }
 
 .input-container input:focus {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 15px rgba(255, 62, 128, 0.1); /* Subtle pink glow on focus */
 }
 
 .input-container button {
-    padding: 12px 20px;
-    background: linear-gradient(to right, #ff3e80, #ff6b9d);
+    padding: 0 25px;
+    background: linear-gradient(135deg, #ff3e80, #ff6b9d);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;      /* Match the input radius */
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(255, 62, 128, 0.3);
 }
 
 .input-container button:hover {
-    background: linear-gradient(to right, #ff2e70, #ff5a80);
-    transform: scale(1.03);
+    transform: translateY(-2px); /* Slight lift instead of just scale */
+    box-shadow: 0 6px 20px rgba(255, 62, 128, 0.4);
 }
 
+.input-container button:active {
+    transform: translateY(0);
+}
 /* ========================================
    HISTORY MODAL (Popup)
    ======================================== */
