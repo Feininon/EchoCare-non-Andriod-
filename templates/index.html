@@ -1,80 +1,157 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="chat-wrapper">
-    <div class="chat-header">
-        <div>
-            <h2>💙 EchoCare Session</h2>
-            <p class="persona-badge">Your Companion: <strong>{{ current_user.username }}'s Profile</strong></p>
+<div class="main-wrapper">
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="history-toggle-btn" onclick="toggleHistoryModal()">
+                📜 Chat History
+            </button>
+            
+            <div class="floating-heart">💙</div>
+            <h2 class="welcome-text">Welcome to EchoCare!</h2>
         </div>
-        <button id="history-btn" class="btn-secondary">📜 History</button>
-    </div>
 
-    <div class="chat-box" id="chat-box">
-        <div class="message bot-message">
-            <div class="bubble">
-                Hello! I'm here to listen without judgment. How are you feeling today?
+        <!-- Chat Area -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>💙 EchoCare</h2>
+            </div>
+            
+            <div id="chat-box">
+                <div class="bot-message">🤖 Hello! I'm here to listen. How are you feeling today?</div>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="Type your thoughts here..." autocomplete="off">
-        <button id="send-btn" class="btn-primary">Send</button>
+<!-- History Modal Popup -->
+<div id="history-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📜 Chat History</h3>
+            <button class="close-btn" onclick="toggleHistoryModal()">×</button>
+        </div>
+        <div class="history-list" id="history-list">
+            <p class="loading-text">Loading history...</p>
+        </div>
     </div>
 </div>
 
-<!-- Crisis Modal (Hidden by default) -->
-<div id="crisis-modal" class="modal" style="display:none;">
-    <div class="modal-content">
+<!-- Crisis Modal -->
+<div id="crisis-modal" class="crisis-modal">
+    <div class="crisis-modal-content">
         <h3>💙 We care about your safety</h3>
         <p id="crisis-message"></p>
-        <button onclick="document.getElementById('crisis-modal').style.display='none'" class="btn-primary">I Understand</button>
+        <button onclick="closeCrisisModal()">I Understand</button>
     </div>
 </div>
 
 <script>
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchChatHistory();
+    });
 
-    function appendMessage(text, sender) {
-        const div = document.createElement('div');
-        div.className = `message ${sender}-message`;
-        div.innerHTML = `<div class="bubble">${text}</div>`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    async function fetchChatHistory() {
+        let response = await fetch("/history");
+        let data = await response.json();
+        let historyList = document.getElementById("history-list");
+        historyList.innerHTML = "";
 
-    async function sendMessage() {
-        const message = userInput.value.trim();
-        if (!message) return;
+        if (Object.keys(data).length === 0) {
+            historyList.innerHTML = "<p class='empty-history'>No chat history yet. Start a conversation!</p>";
+            return;
+        }
 
-        appendMessage(message, 'user');
-        userInput.value = '';
+        for (let date in data) {
+            let historyItem = document.createElement("div");
+            historyItem.className = "history-item";
+            
+            let dateDiv = document.createElement("div");
+            dateDiv.className = "history-date";
+            dateDiv.textContent = "📅 " + date;
+            historyItem.appendChild(dateDiv);
 
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
+            data[date].forEach(msg => {
+                let entryDiv = document.createElement("div");
+                entryDiv.className = "history-entry";
+                entryDiv.innerHTML = `
+                    <div class="history-user"><strong>You (${msg.time}):</strong> ${msg.user_message}</div>
+                    <div class="history-bot"><strong>EchoCare (${msg.time}):</strong> ${msg.bot_response}</div>
+                `;
+                historyItem.appendChild(entryDiv);
             });
-            const data = await response.json();
 
-            if (data.is_crisis) {
-                document.getElementById('crisis-message').innerText = data.bot_response;
-                document.getElementById('crisis-modal').style.display = 'block';
-            } else {
-                appendMessage(data.bot_response, 'bot');
-            }
-        } catch (error) {
-            appendMessage("Error connecting to EchoCare. Please try again.", 'bot');
+            historyList.appendChild(historyItem);
         }
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    function toggleHistoryModal() {
+        let modal = document.getElementById("history-modal");
+        if (modal.style.display === "flex") {
+            modal.style.display = "none";
+        } else {
+            modal.style.display = "flex";
+            fetchChatHistory();
+        }
+    }
+
+    async function sendMessage() {
+        let userInput = document.getElementById("user-input");
+        let userMessage = userInput.value.trim();
+        if (!userMessage) return;
+
+        let chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML += `<div class="user-message">🧑 You: ${userMessage}</div>`;
+        userInput.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            let response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessage })
+            });
+
+            let data = await response.json();
+
+            if (data.is_crisis) {
+                document.getElementById("crisis-message").innerText = data.bot_response;
+                document.getElementById("crisis-modal").style.display = "flex";
+            } else {
+                chatBox.innerHTML += `<div class="bot-message">🤖 EchoCare: ${data.bot_response}</div>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (error) {
+            chatBox.innerHTML += `<div class="bot-message">⚠️ Error connecting. Please try again.</div>`;
+        }
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    }
+
+    function closeCrisisModal() {
+        document.getElementById("crisis-modal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        let historyModal = document.getElementById("history-modal");
+        let crisisModal = document.getElementById("crisis-modal");
+        if (event.target === historyModal) {
+            historyModal.style.display = "none";
+        }
+        if (event.target === crisisModal) {
+            crisisModal.style.display = "none";
+        }
+    }
 </script>
 {% endblock %}

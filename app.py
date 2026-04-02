@@ -247,14 +247,21 @@ def chat():
 @login_required
 def chat_history():
     """Fetch chat history for UI."""
-    chats = chat_collection.find({"user_id": current_user.id}).sort("timestamp", -1).limit(50)
-    history = []
+    user_id = current_user.id
+    history = {}
+    chats = chat_collection.find({"user_id": user_id}).sort("timestamp", -1).limit(100)
+
     for chat in chats:
-        history.append({
+        date = chat["timestamp"].strftime("%Y-%m-%d")
+        time = chat["timestamp"].strftime("%I:%M %p")
+        if date not in history:
+            history[date] = []
+        history[date].append({
+            "time": time,
             "user_message": chat["user_message"],
-            "bot_response": chat["bot_response"],
-            "timestamp": chat["timestamp"].strftime("%I:%M %p")
+            "bot_response": chat["bot_response"]
         })
+
     return jsonify(history)
 
 if __name__ == "__main__":

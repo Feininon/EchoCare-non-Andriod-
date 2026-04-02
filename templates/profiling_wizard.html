@@ -1,130 +1,61 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="wizard-container">
-    <div class="wizard-header">
-        <h2>👋 Let's get to know you</h2>
-        <p class="subtitle">Take your time. Share what feels natural — there are no right or wrong answers. This helps me understand how to best support you.</p>
-    </div>
-    
-    <form method="POST" action="{{ url_for('profiling_wizard') }}" id="profiling-form">
-        {% for q in questions %}
-        <div class="question-step" id="step-{{ loop.index }}" style="display: {% if loop.first %}block{% else %}none{% endif %};">
-            <p class="question-text">{{ q.question }}</p>
-            <textarea 
-                name="{{ q.id }}" 
-                rows="5" 
-                placeholder="Write whatever comes to mind..." 
-                required
-                class="response-input"
-            ></textarea>
-            <div class="step-nav">
-                {% if not loop.last %}
-                    <button type="button" class="btn-secondary" onclick="nextStep({{ loop.index }})">Next</button>
-                {% else %}
-                    <button type="submit" class="btn-primary">Continue</button>
-                {% endif %}
-            </div>
+<div class="wizard-wrapper">
+    <div class="wizard-container">
+        <div class="wizard-header">
+            <div class="floating-heart">💙</div>
+            <h1>Let's get to know you</h1>
+            <p class="wizard-subtitle">EchoCare adapts to your cognitive style. There are no right or wrong answers.</p>
         </div>
-        {% endfor %}
-    </form>
-    
-    <div class="progress-indicator">
-        <div class="progress-bar" id="progress-bar"></div>
+        
+        <form method="POST" class="wizard-form" id="profiling-form">
+            {% for q in questions %}
+            <div class="question-card" id="step-{{ loop.index }}" style="display: {% if loop.first %}block{% else %}none{% endif %};">
+                <div class="question-number">Question {{ loop.index }} of {{ questions|length }}</div>
+                <h3 class="question-text">{{ q.question }}</h3>
+                <p class="axis-label">{{ q.axis }}</p>
+                
+                <textarea 
+                    name="{{ q.id }}" 
+                    rows="5" 
+                    placeholder="Share your thoughts naturally..." 
+                    required
+                    class="response-input"
+                ></textarea>
+                
+                <div class="question-nav">
+                    {% if not loop.last %}
+                        <button type="button"  class="btn-secondary" onclick="nextStep({{ loop.index }})">Next</button>
+                    {% else %}
+                        <button type="submit" class="btn-primary">Complete Profile</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </form>
+        
+        <div class="progress-indicator">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
     </div>
 </div>
 
-<style>
-.wizard-container {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    max-width: 600px;
-    margin: 2rem auto;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.wizard-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.subtitle {
-    color: #666;
-    font-size: 1rem;
-    line-height: 1.6;
-}
-
-.question-text {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-    color: #333;
-    line-height: 1.5;
-}
-
-.response-input {
-    width: 100%;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    resize: vertical;
-    margin-bottom: 1.5rem;
-    transition: border-color 0.2s;
-}
-
-.response-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-}
-
-.step-nav {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.progress-indicator {
-    height: 4px;
-    background: #eee;
-    border-radius: 2px;
-    margin-top: 2rem;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: var(--primary);
-    width: 25%;
-    transition: width 0.3s ease;
-}
-
-/* Smooth transitions */
-.question-step {
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>
-
 <script>
 function nextStep(current) {
-    // Validate current step has input
     const textarea = document.querySelector(`#step-${current} textarea`);
     if (!textarea.value.trim()) {
         textarea.placeholder = "Please share your thoughts first...";
+        textarea.style.borderColor = "#ff3e80";
+        setTimeout(() => {
+            textarea.style.borderColor = "";
+        }, 2000);
         return;
     }
     
-    // Hide current, show next
     document.getElementById(`step-${current}`).style.display = 'none';
     document.getElementById(`step-${current + 1}`).style.display = 'block';
     
-    // Update progress
     const progress = (current / {{ questions|length }}) * 100;
     document.getElementById('progress-bar').style.width = `${progress}%`;
 }
